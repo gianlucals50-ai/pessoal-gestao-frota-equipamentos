@@ -1,0 +1,1405 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1d4ed8">
+<title>Frota - Prototipo (motorista + administrador)</title>
+<style>
+/* ============================================================
+   Protótipo — Controle de Frota / Troca de Caminhão
+   Estilo pensado para usuários de baixa escolaridade:
+   - textos curtos, fonte grande, muito contraste
+   - botões enormes, um passo por tela
+   - cores com significado: verde = ok, vermelho = falta,
+     amarelo = danificado, azul = ação
+   ============================================================ */
+
+:root {
+  --azul: #1d4ed8;
+  --azul-escuro: #1e3a8a;
+  --verde: #15803d;
+  --verde-claro: #dcfce7;
+  --vermelho: #b91c1c;
+  --vermelho-claro: #fee2e2;
+  --amarelo: #b45309;
+  --amarelo-claro: #fef3c7;
+  --cinza-texto: #1f2937;
+  --cinza-suave: #6b7280;
+  --cinza-borda: #d1d5db;
+  --cinza-fundo: #f3f4f6;
+  --branco: #ffffff;
+  --raio: 16px;
+  --sombra: 0 2px 10px rgba(0, 0, 0, .12);
+  --fonte: "Segoe UI", Roboto, system-ui, -apple-system, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--fonte);
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--cinza-texto);
+  background: var(--cinza-fundo);
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3 { margin: 0 0 .4em; line-height: 1.2; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.3rem; }
+p { margin: 0 0 1em; }
+img { max-width: 100%; display: block; }
+
+/* ---------- Botões grandes ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 14px 18px;
+  border: 3px solid transparent;
+  border-radius: var(--raio);
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .05s ease, filter .15s ease;
+}
+.btn:active { transform: scale(.98); }
+.btn-primario { background: var(--azul); color: #fff; }
+.btn-primario:hover { filter: brightness(1.08); }
+.btn-verde { background: var(--verde); color: #fff; }
+.btn-claro {
+  background: #fff;
+  color: var(--azul-escuro);
+  border-color: var(--cinza-borda);
+}
+.btn-fantasma {
+  background: transparent;
+  color: var(--cinza-suave);
+  min-height: 48px;
+  font-size: 1rem;
+  border: none;
+}
+.btn .icone { font-size: 1.5rem; line-height: 1; }
+.btn[disabled] { opacity: .45; pointer-events: none; }
+
+/* ============================================================
+   APP DO MOTORISTA (celular)
+   ============================================================ */
+.telefone-app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--cinza-fundo);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-topo {
+  background: var(--azul);
+  color: #fff;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-topo .voltar {
+  background: rgba(255, 255, 255, .18);
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  flex: none;
+}
+.app-topo .titulo { font-size: 1.15rem; font-weight: 700; }
+.app-topo .marca { font-size: 1.15rem; font-weight: 800; letter-spacing: .5px; }
+
+.app-conteudo { flex: 1; padding: 18px; }
+
+.tela { display: none; }
+.tela.ativa { display: block; animation: aparece .18s ease; }
+@keyframes aparece { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Passos */
+.passos {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.passos span {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--cinza-borda);
+}
+.passos span.feito { background: var(--verde); }
+.passos span.atual { background: var(--azul); }
+.passo-texto {
+  font-size: .95rem;
+  color: var(--cinza-suave);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* Login */
+.login-caixa { text-align: center; padding-top: 24px; }
+.login-caixa .logo {
+  width: 92px; height: 92px;
+  margin: 0 auto 18px;
+  background: var(--azul);
+  color: #fff;
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem;
+}
+.campo { text-align: left; margin-bottom: 16px; }
+.campo label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 1.05rem; }
+.campo input {
+  width: 100%;
+  min-height: 60px;
+  padding: 12px 16px;
+  font-size: 1.15rem;
+  border: 3px solid var(--cinza-borda);
+  border-radius: var(--raio);
+  font-family: inherit;
+}
+.campo input:focus { outline: none; border-color: var(--azul); }
+
+/* Cartão do caminhão atual */
+.cartao {
+  background: #fff;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.cartao .rotulo { font-size: .9rem; color: var(--cinza-suave); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.placa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fde047;
+  border: 3px solid #1f2937;
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  margin: 6px 0;
+  font-family: "Consolas", monospace;
+}
+.placa.pequena { font-size: 1.1rem; padding: 4px 10px; }
+
+.lista-escolha { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.item-escolha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 3px solid var(--cinza-borda);
+  border-radius: var(--raio);
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  font-size: 1.1rem;
+}
+.item-escolha:hover { border-color: var(--azul); }
+.item-escolha.selecionado { border-color: var(--verde); background: var(--verde-claro); }
+.item-escolha .foto-mini {
+  width: 60px; height: 46px; flex: none;
+  border-radius: 8px;
+  background: #e5e7eb url("caminhao.svg") center/70% no-repeat;
+}
+
+/* Botão de foto / foto tirada */
+.foto-campo { margin-bottom: 16px; }
+.foto-campo > label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
+.foto-botao {
+  width: 100%;
+  min-height: 120px;
+  border: 3px dashed var(--azul);
+  border-radius: var(--raio);
+  background: #eef2ff;
+  color: var(--azul-escuro);
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.foto-botao .icone { font-size: 2.4rem; }
+.foto-tirada {
+  position: relative;
+  border-radius: var(--raio);
+  overflow: hidden;
+  border: 3px solid var(--verde);
+}
+.foto-tirada .imagem {
+  height: 150px;
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 3rem;
+}
+.foto-tirada .selo {
+  position: absolute; top: 8px; left: 8px;
+  background: var(--verde); color: #fff;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: .9rem; font-weight: 700;
+}
+.foto-tirada .refazer {
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(0,0,0,.6); color: #fff;
+  border: none; border-radius: 8px;
+  padding: 8px 12px; font-size: .95rem; cursor: pointer;
+  font-family: inherit;
+}
+
+/* Checklist */
+.checklist-item {
+  background: #fff;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.checklist-item .cabeca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.checklist-item .emoji {
+  font-size: 2rem;
+  width: 52px; height: 52px;
+  background: var(--cinza-fundo);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex: none;
+}
+.checklist-item .nome { font-weight: 700; font-size: 1.1rem; }
+.checklist-item .status-atual { font-size: .9rem; font-weight: 700; }
+.checklist-item.ok { border-left: 8px solid var(--verde); }
+.checklist-item.falta { border-left: 8px solid var(--vermelho); }
+.checklist-item.dano { border-left: 8px solid var(--amarelo); }
+
+.opcoes-status { display: flex; gap: 8px; margin-bottom: 10px; }
+.opcoes-status button {
+  flex: 1;
+  min-height: 56px;
+  border-radius: 12px;
+  border: 3px solid var(--cinza-borda);
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  line-height: 1.1;
+}
+.opcoes-status button .ic { font-size: 1.3rem; }
+.opcoes-status button.sel-ok { border-color: var(--verde); background: var(--verde-claro); color: var(--verde); }
+.opcoes-status button.sel-falta { border-color: var(--vermelho); background: var(--vermelho-claro); color: var(--vermelho); }
+.opcoes-status button.sel-dano { border-color: var(--amarelo); background: var(--amarelo-claro); color: var(--amarelo); }
+
+.mini-foto-botao {
+  width: 100%;
+  min-height: 52px;
+  border: 3px dashed var(--cinza-borda);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--cinza-suave);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.mini-foto-botao.tem { border-style: solid; border-color: var(--verde); color: var(--verde); background: var(--verde-claro); }
+
+/* Revisar */
+.resumo-linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 2px solid var(--cinza-borda);
+}
+.resumo-linha:last-child { border-bottom: none; }
+.resumo-linha .rot { color: var(--cinza-suave); font-weight: 700; }
+.resumo-linha .val { font-weight: 700; text-align: right; }
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 800;
+}
+.tag.ok { background: var(--verde-claro); color: var(--verde); }
+.tag.falta { background: var(--vermelho-claro); color: var(--vermelho); }
+.tag.dano { background: var(--amarelo-claro); color: var(--amarelo); }
+
+/* Sucesso */
+.sucesso { text-align: center; padding-top: 30px; }
+.sucesso .check {
+  width: 120px; height: 120px;
+  margin: 0 auto 20px;
+  background: var(--verde);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 4rem;
+  animation: pulo .4s ease;
+}
+@keyframes pulo { 0% { transform: scale(.5); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+.rodape-fixo {
+  position: sticky;
+  bottom: 0;
+  background: var(--cinza-fundo);
+  padding: 14px 18px;
+  border-top: 2px solid var(--cinza-borda);
+}
+
+.aviso {
+  background: var(--amarelo-claro);
+  border: 2px solid #fcd34d;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: .95rem;
+  margin-bottom: 14px;
+}
+
+/* ============================================================
+   PÁGINA INICIAL (hub do protótipo)
+   ============================================================ */
+.hub {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+.hub-cabecalho { text-align: center; margin-bottom: 40px; }
+.hub-cabecalho .marca {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 1.6rem; font-weight: 800; color: var(--azul-escuro);
+}
+.hub-cabecalho .marca .quad {
+  width: 44px; height: 44px; background: var(--azul); color: #fff;
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+}
+.hub-cabecalho p { color: var(--cinza-suave); max-width: 640px; margin: 12px auto 0; }
+.selo-proto {
+  display: inline-block;
+  background: var(--amarelo-claro);
+  color: var(--amarelo);
+  border: 2px solid #fcd34d;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: .85rem;
+  margin-bottom: 16px;
+}
+
+.hub-grade {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  align-items: start;
+}
+@media (max-width: 860px) { .hub-grade { grid-template-columns: 1fr; } }
+
+.hub-coluna { text-align: center; }
+.hub-coluna h2 { color: var(--azul-escuro); }
+.hub-coluna .legenda { color: var(--cinza-suave); margin-bottom: 20px; }
+
+/* moldura de celular */
+.moldura-celular {
+  width: 340px;
+  max-width: 100%;
+  margin: 0 auto 18px;
+  background: #111827;
+  border-radius: 44px;
+  padding: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
+}
+.moldura-celular .tela-fisica {
+  border-radius: 30px;
+  overflow: hidden;
+  background: #fff;
+  height: 680px;
+}
+.moldura-celular iframe { width: 100%; height: 100%; border: 0; }
+
+/* moldura de notebook */
+.moldura-note {
+  width: 100%;
+  margin: 0 auto 18px;
+  background: #111827;
+  border-radius: 16px 16px 0 0;
+  padding: 12px 12px 0;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
+}
+.moldura-note .tela-fisica {
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  background: #fff;
+  height: 480px;
+}
+.moldura-note iframe { width: 100%; height: 100%; border: 0; }
+.moldura-note-base {
+  height: 16px;
+  background: #1f2937;
+  border-radius: 0 0 14px 14px;
+  width: calc(100% + 0px);
+  margin: 0 auto 18px;
+  max-width: 100%;
+}
+
+/* ============================================================
+   PAINEL DO ADMINISTRADOR (web)
+   ============================================================ */
+.admin { min-height: 100vh; background: var(--cinza-fundo); }
+.admin-topo {
+  background: var(--azul-escuro);
+  color: #fff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  height: 64px;
+  position: sticky; top: 0; z-index: 20;
+}
+.admin-topo .marca { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+.admin-nav { display: flex; gap: 6px; flex: 1; }
+.admin-nav button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, .8);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.admin-nav button.ativo { background: rgba(255, 255, 255, .15); color: #fff; }
+.admin-sino {
+  position: relative;
+  background: rgba(255, 255, 255, .12);
+  border: none; color: #fff;
+  width: 44px; height: 44px; border-radius: 12px;
+  font-size: 1.3rem; cursor: pointer;
+}
+.admin-sino .bolha {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--vermelho); color: #fff;
+  border-radius: 999px; min-width: 22px; height: 22px;
+  font-size: .8rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--azul-escuro);
+}
+.admin-usuario { font-size: .95rem; opacity: .85; }
+
+.admin-corpo { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+.admin-secao { display: none; }
+.admin-secao.ativa { display: block; }
+.admin-secao h1 { font-size: 1.7rem; margin-bottom: 6px; }
+.admin-secao .sub { color: var(--cinza-suave); margin-bottom: 24px; }
+
+.cards-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+@media (max-width: 900px) { .cards-kpi { grid-template-columns: repeat(2, 1fr); } }
+.kpi {
+  background: #fff;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 18px;
+}
+.kpi .numero { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+.kpi .rotulo { color: var(--cinza-suave); font-weight: 700; margin-top: 6px; font-size: .95rem; }
+.kpi.alerta .numero { color: var(--vermelho); }
+.kpi.ok .numero { color: var(--verde); }
+
+.painel-bloco {
+  background: #fff;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.painel-bloco > header {
+  padding: 16px 20px;
+  border-bottom: 2px solid var(--cinza-fundo);
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+table.tabela { width: 100%; border-collapse: collapse; }
+table.tabela th, table.tabela td {
+  text-align: left;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--cinza-fundo);
+  font-size: .98rem;
+}
+table.tabela th { color: var(--cinza-suave); font-size: .85rem; text-transform: uppercase; letter-spacing: .5px; }
+table.tabela tr.clicavel { cursor: pointer; }
+table.tabela tr.clicavel:hover { background: #f9fafb; }
+.rota { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.rota .seta { color: var(--azul); }
+
+.pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 800;
+}
+.pill.novo { background: var(--azul); color: #fff; }
+.pill.revisado { background: var(--verde-claro); color: var(--verde); }
+.pill.pendente { background: var(--amarelo-claro); color: var(--amarelo); }
+.pill.problema { background: var(--vermelho-claro); color: var(--vermelho); }
+
+/* detalhe da troca */
+.voltar-link {
+  background: none; border: none; color: var(--azul);
+  font-family: inherit; font-size: 1rem; font-weight: 700;
+  cursor: pointer; padding: 0; margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.detalhe-grade {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 900px) { .detalhe-grade { grid-template-columns: 1fr; } }
+
+.galeria-fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.foto-thumb {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--cinza-borda);
+  background: #fff;
+}
+.foto-thumb .img {
+  height: 110px;
+  background: linear-gradient(135deg, #475569, #94a3b8);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 2rem;
+}
+.foto-thumb .cap { padding: 8px 10px; font-size: .85rem; font-weight: 700; }
+
+.checklist-admin { list-style: none; margin: 0; padding: 0; }
+.checklist-admin li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cinza-fundo);
+}
+.checklist-admin li .emoji { font-size: 1.5rem; width: 40px; text-align: center; }
+.checklist-admin li .nome { flex: 1; font-weight: 700; }
+.checklist-admin li .cam { font-size: 1.2rem; opacity: .6; }
+.checklist-admin li .cam.tem { opacity: 1; }
+
+.notif-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--cinza-fundo);
+  display: flex;
+  gap: 12px;
+}
+.notif-item .ponto {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--azul); flex: none; margin-top: 7px;
+}
+.notif-item .quando { color: var(--cinza-suave); font-size: .85rem; }
+
+.grade-cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.cartao-veiculo {
+  background: #fff;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 18px;
+}
+.cartao-veiculo .placa { font-size: 1.2rem; }
+.cartao-veiculo .quem { color: var(--cinza-suave); font-size: .95rem; margin-top: 8px; }
+
+.form-inline { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.form-inline input {
+  min-height: 48px; padding: 8px 14px; font-size: 1rem;
+  border: 2px solid var(--cinza-borda); border-radius: 10px; font-family: inherit;
+}
+.form-inline .btn { width: auto; min-height: 48px; padding: 8px 20px; font-size: 1rem; }
+
+/* login admin */
+.admin-login {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--azul-escuro);
+  padding: 20px;
+}
+.admin-login .caixa {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.admin-login .logo {
+  width: 70px; height: 70px; margin: 0 auto 20px;
+  background: var(--azul); color: #fff; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+}
+.admin-login h1 { text-align: center; font-size: 1.4rem; }
+.admin-login .sub { text-align: center; color: var(--cinza-suave); margin-bottom: 24px; }
+
+.oculto { display: none !important; }
+
+#switchBar{position:sticky;top:0;z-index:50;display:flex;gap:8px;padding:10px;background:#0f172a;justify-content:center;flex-wrap:wrap}
+#switchBar button{flex:0 1 240px;min-height:48px;border:none;border-radius:10px;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;background:rgba(255,255,255,.15);color:#fff}
+#switchBar button.on{background:#fff;color:#0f172a}
+#viewMotorista{background:#e5e7eb;padding:16px 0}
+#viewMotorista .telefone-app{border-radius:26px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25);min-height:82vh}
+.app-topo,.admin-topo{top:68px !important}
+</style>
+<script>
+/* Dados de exemplo compartilhados pelo protótipo.
+   Nada é salvo de verdade — é só para mostrar o layout. */
+
+window.DEMO = {
+  // Kit básico obrigatório em todo caminhão
+  kit: [
+    { id: "macaco",      nome: "Macaco hidráulico",            emoji: "🛠️" },
+    { id: "chave_roda",  nome: "Chave de roda",                emoji: "🔧" },
+    { id: "extintor",    nome: "Extintor",                     emoji: "🧯" },
+    { id: "cabo_forca",  nome: "Cabo de força (chupeta)",      emoji: "🔌" },
+    { id: "triangulo",   nome: "Triângulo de sinalização",     emoji: "🔺" },
+    { id: "step",        nome: "Estepe (step)",                emoji: "🛞" },
+    { id: "parabrisa",   nome: "Para-brisa",                   emoji: "🪟" },
+    { id: "retrovisor",  nome: "Retrovisores",                 emoji: "🪞" },
+    { id: "faixa_lat",   nome: "Faixas refletivas laterais",   emoji: "🟨" },
+    { id: "faixa_para",  nome: "Faixas refletivas do para-choque", emoji: "🟧" },
+  ],
+
+  // Caminhões (cavalos mecânicos) da frota
+  caminhoes: [
+    { placa: "RXA-1B23", modelo: "Scania R450",        carretas: ["SLT-4C55", "SLT-4C56"] },
+    { placa: "QPT-9D87", modelo: "Volvo FH 460",       carretas: ["SLT-2A10"] },
+    { placa: "RKM-3F41", modelo: "Mercedes Actros",    carretas: ["SLT-8H22", "SLT-8H23"] },
+    { placa: "PYB-7G09", modelo: "DAF XF",             carretas: ["SLT-1J77"] },
+    { placa: "RTC-5K62", modelo: "Iveco S-Way",        carretas: [] },
+  ],
+
+  motoristaAtual: {
+    nome: "José da Silva",
+    usuario: "jose.silva",
+    caminhaoAtual: "QPT-9D87",
+  },
+
+  // Trocas recentes que aparecem no painel do administrador
+  trocas: [
+    {
+      id: "T-1042", motorista: "José da Silva", de: "RXA-1B23", para: "QPT-9D87",
+      quando: "Hoje, 07:12", status: "novo", problemas: 0,
+    },
+    {
+      id: "T-1041", motorista: "Antônio Pereira", de: "RKM-3F41", para: "PYB-7G09",
+      quando: "Hoje, 06:40", status: "problema", problemas: 2,
+    },
+    {
+      id: "T-1040", motorista: "Marcos Souza", de: "PYB-7G09", para: "RTC-5K62",
+      quando: "Ontem, 18:05", status: "revisado", problemas: 0,
+    },
+    {
+      id: "T-1039", motorista: "Luiz Gomes", de: "QPT-9D87", para: "RKM-3F41",
+      quando: "Ontem, 14:22", status: "revisado", problemas: 1,
+    },
+    {
+      id: "T-1038", motorista: "José da Silva", de: "RTC-5K62", para: "RXA-1B23",
+      quando: "Ontem, 08:15", status: "revisado", problemas: 0,
+    },
+  ],
+
+  motoristas: [
+    { nome: "José da Silva",     usuario: "jose.silva",     caminhao: "QPT-9D87" },
+    { nome: "Antônio Pereira",   usuario: "antonio.p",      caminhao: "PYB-7G09" },
+    { nome: "Marcos Souza",      usuario: "marcos.souza",   caminhao: "RTC-5K62" },
+    { nome: "Luiz Gomes",        usuario: "luiz.gomes",     caminhao: "RKM-3F41" },
+    { nome: "Pedro Henrique",    usuario: "pedro.h",        caminhao: "—" },
+  ],
+
+  notificacoes: [
+    { texto: "José da Silva trocou de caminhão: RXA-1B23 → QPT-9D87", quando: "há 5 min" },
+    { texto: "Antônio Pereira registrou 2 itens com problema na troca T-1041", quando: "há 37 min" },
+    { texto: "Marcos Souza trocou de caminhão: PYB-7G09 → RTC-5K62", quando: "ontem, 18:05" },
+  ],
+};
+
+</script>
+</head>
+<body>
+<div id="switchBar">
+  <button id="swMot" class="on">📱 App do Motorista</button>
+  <button id="swAdm">💻 Painel do Administrador</button>
+</div>
+<div id="viewMotorista">
+<div class="telefone-app">
+
+  <!-- Barra de cima -->
+  <div class="app-topo" id="appTopo">
+    <button class="voltar oculto" id="btnVoltar" aria-label="Voltar">‹</button>
+    <span class="marca" id="topoMarca">🚚 FROTA</span>
+    <span class="titulo oculto" id="topoTitulo"></span>
+  </div>
+
+  <div class="app-conteudo">
+
+    <!-- ================= LOGIN ================= -->
+    <section class="tela ativa" data-tela="login">
+      <div class="login-caixa">
+        <div class="logo">🚚</div>
+        <h1>Entrar</h1>
+        <p style="color:var(--cinza-suave)">Use seu usuário e senha</p>
+
+        <div class="campo">
+          <label for="usuario">👤 Usuário</label>
+          <input id="usuario" type="text" inputmode="text" autocomplete="username" value="jose.silva">
+        </div>
+        <div class="campo">
+          <label for="senha">🔒 Senha</label>
+          <input id="senha" type="password" autocomplete="current-password" value="1234">
+        </div>
+
+        <button class="btn btn-primario" data-ir="home">
+          <span class="icone">✅</span> ENTRAR
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="tela" data-tela="home">
+      <h2>Olá, José 👋</h2>
+
+      <div class="cartao">
+        <span class="rotulo">Seu caminhão agora</span>
+        <div class="placa">🚛 QPT-9D87</div>
+        <div style="color:var(--cinza-suave)">Volvo FH 460 · 1 carreta</div>
+      </div>
+
+      <button class="btn btn-primario" style="min-height:90px;font-size:1.3rem" data-ir="troca_de">
+        <span class="icone">🔄</span> TROCAR DE CAMINHÃO
+      </button>
+
+      <h3 style="margin-top:28px">Minhas últimas trocas</h3>
+      <div class="cartao" style="padding:0">
+        <div class="resumo-linha" style="padding:14px 16px">
+          <span class="rot">Ontem 08:15</span>
+          <span class="val">RTC-5K62 → RXA-1B23</span>
+        </div>
+        <div class="resumo-linha" style="padding:14px 16px">
+          <span class="rot">3 dias atrás</span>
+          <span class="val">RXA-1B23 → QPT-9D87</span>
+        </div>
+      </div>
+
+      <button class="btn btn-fantasma" style="margin-top:20px" data-ir="login">Sair da conta</button>
+    </section>
+
+    <!-- ================= PASSO 1: SAINDO DE ================= -->
+    <section class="tela" data-tela="troca_de" data-passo="1">
+      <div class="passos"><span class="atual"></span><span></span><span></span><span></span><span></span></div>
+      <div class="passo-texto">PASSO 1 DE 5</div>
+      <h2>De qual caminhão você está saindo?</h2>
+
+      <button class="item-escolha selecionado" style="margin-bottom:8px">
+        <span class="foto-mini"></span>
+        <span>
+          <span class="placa pequena">QPT-9D87</span><br>
+          Volvo FH 460 — seu caminhão atual
+        </span>
+      </button>
+      <p style="color:var(--cinza-suave);font-size:.95rem">Já deixamos marcado o caminhão em que você está. É só confirmar.</p>
+
+      <button class="btn btn-primario" data-ir="troca_para">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 2: INDO PARA ================= -->
+    <section class="tela" data-tela="troca_para" data-passo="2">
+      <div class="passos"><span class="feito"></span><span class="atual"></span><span></span><span></span><span></span></div>
+      <div class="passo-texto">PASSO 2 DE 5</div>
+      <h2>Para qual caminhão você vai?</h2>
+
+      <div class="campo">
+        <input type="text" placeholder="🔍 Digite ou procure a placa" id="buscaCaminhao">
+      </div>
+
+      <div class="lista-escolha" id="listaCaminhoes"><!-- preenchido por JS --></div>
+
+      <button class="btn btn-primario oculto" id="btnPasso2" data-ir="placas">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 3: FOTOS DAS PLACAS ================= -->
+    <section class="tela" data-tela="placas" data-passo="3">
+      <div class="passos"><span class="feito"></span><span class="feito"></span><span class="atual"></span><span></span><span></span></div>
+      <div class="passo-texto">PASSO 3 DE 5</div>
+      <h2>Fotografe as placas</h2>
+      <div class="aviso">📸 Tire a foto de perto, com a placa bem legível.</div>
+
+      <div class="foto-campo" data-foto="cavalo">
+        <label>1. Placa do cavalo mecânico</label>
+        <button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>
+      </div>
+
+      <div class="foto-campo" data-foto="carreta1">
+        <label>2. Placa da 1ª carreta</label>
+        <button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>
+      </div>
+
+      <div class="foto-campo" data-foto="carreta2">
+        <label>3. Placa da 2ª carreta</label>
+        <button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>
+      </div>
+
+      <button class="btn btn-fantasma" id="btnAddCarreta">➕ Tem outra carreta engatada</button>
+
+      <button class="btn btn-primario" style="margin-top:12px" data-ir="checklist">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 4: CHECKLIST ================= -->
+    <section class="tela" data-tela="checklist" data-passo="4">
+      <div class="passos"><span class="feito"></span><span class="feito"></span><span class="feito"></span><span class="atual"></span><span></span></div>
+      <div class="passo-texto">PASSO 4 DE 5 · <span id="checklistContagem">0 de 10</span></div>
+      <h2>Confira os itens do caminhão</h2>
+      <div class="aviso">Para cada item: toque em <b>Tem</b>, <b>Falta</b> ou <b>Danificado</b> e tire uma foto.</div>
+
+      <div id="listaChecklist"><!-- preenchido por JS --></div>
+
+      <button class="btn btn-primario" data-ir="revisar">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 5: REVISAR ================= -->
+    <section class="tela" data-tela="revisar" data-passo="5">
+      <div class="passos"><span class="feito"></span><span class="feito"></span><span class="feito"></span><span class="feito"></span><span class="atual"></span></div>
+      <div class="passo-texto">PASSO 5 DE 5</div>
+      <h2>Confira antes de enviar</h2>
+
+      <div class="cartao">
+        <div class="resumo-linha"><span class="rot">Saindo de</span><span class="val">QPT-9D87</span></div>
+        <div class="resumo-linha"><span class="rot">Indo para</span><span class="val" id="revParaPlaca">RXA-1B23</span></div>
+        <div class="resumo-linha"><span class="rot">Fotos das placas</span><span class="val">✅ 3 fotos</span></div>
+        <div class="resumo-linha"><span class="rot">Motorista</span><span class="val">José da Silva</span></div>
+        <div class="resumo-linha"><span class="rot">Data e hora</span><span class="val">Hoje, 07:12</span></div>
+      </div>
+
+      <h3>Itens conferidos</h3>
+      <div class="cartao" id="resumoChecklist" style="padding:6px 16px"><!-- JS --></div>
+
+      <button class="btn btn-verde" style="min-height:90px;font-size:1.3rem" data-ir="sucesso">
+        <span class="icone">📨</span> ENVIAR TROCA
+      </button>
+      <button class="btn btn-fantasma" data-ir="checklist">Voltar e corrigir</button>
+    </section>
+
+    <!-- ================= SUCESSO ================= -->
+    <section class="tela" data-tela="sucesso">
+      <div class="sucesso">
+        <div class="check">✓</div>
+        <h1>Troca registrada!</h1>
+        <p style="font-size:1.15rem">O escritório já foi avisado da sua troca de caminhão.</p>
+        <div class="cartao" style="text-align:left">
+          <div class="resumo-linha"><span class="rot">Protocolo</span><span class="val">T-1042</span></div>
+          <div class="resumo-linha"><span class="rot">Novo caminhão</span><span class="val" id="sucParaPlaca">RXA-1B23</span></div>
+        </div>
+        <button class="btn btn-primario" data-ir="home">
+          <span class="icone">🏠</span> VOLTAR AO INÍCIO
+        </button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+
+<script>
+(function () {
+  const D = window.DEMO;
+  const telas = [...document.querySelectorAll(".tela")];
+  const btnVoltar = document.getElementById("btnVoltar");
+  const topoMarca = document.getElementById("topoMarca");
+  const topoTitulo = document.getElementById("topoTitulo");
+  const historico = [];
+  const titulos = {
+    home: "Início", troca_de: "Trocar de caminhão", troca_para: "Trocar de caminhão",
+    placas: "Fotos das placas", checklist: "Checklist", revisar: "Revisar", sucesso: ""
+  };
+  let caminhaoDestino = null;
+
+  function mostrar(nome, push = true) {
+    telas.forEach(t => t.classList.toggle("ativa", t.dataset.tela === nome));
+    if (push && historico[historico.length - 1] !== nome) historico.push(nome);
+    const temVoltar = nome !== "login" && nome !== "home" && nome !== "sucesso";
+    btnVoltar.classList.toggle("oculto", !temVoltar);
+    const ehApp = nome !== "login";
+    topoMarca.classList.toggle("oculto", ehApp);
+    topoTitulo.classList.toggle("oculto", !ehApp);
+    topoTitulo.textContent = titulos[nome] || "";
+    window.scrollTo(0, 0);
+    document.querySelector(".app-conteudo").scrollTo(0, 0);
+  }
+
+  btnVoltar.addEventListener("click", () => {
+    historico.pop();
+    const anterior = historico[historico.length - 1] || "home";
+    mostrar(anterior, false);
+  });
+
+  document.body.addEventListener("click", (e) => {
+    const alvo = e.target.closest("[data-ir]");
+    if (alvo) {
+      const destino = alvo.dataset.ir;
+      if (destino === "login") historico.length = 0;
+      mostrar(destino);
+      if (destino === "checklist") montarChecklist();
+      if (destino === "revisar") montarResumo();
+    }
+  });
+
+  /* ---------- Passo 2: lista de caminhões ---------- */
+  const lista = document.getElementById("listaCaminhoes");
+  const btnPasso2 = document.getElementById("btnPasso2");
+  D.caminhoes
+    .filter(c => c.placa !== D.motoristaAtual.caminhaoAtual)
+    .forEach(c => {
+      const b = document.createElement("button");
+      b.className = "item-escolha";
+      b.innerHTML = `<span class="foto-mini"></span>
+        <span><span class="placa pequena">${c.placa}</span><br>${c.modelo}
+        ${c.carretas.length ? " — " + c.carretas.length + " carreta(s)" : " — sem carreta"}</span>`;
+      b.addEventListener("click", () => {
+        lista.querySelectorAll(".item-escolha").forEach(x => x.classList.remove("selecionado"));
+        b.classList.add("selecionado");
+        caminhaoDestino = c;
+        btnPasso2.classList.remove("oculto");
+        ajustarCamposCarreta(c);
+      });
+      lista.appendChild(b);
+    });
+
+  document.getElementById("buscaCaminhao").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    lista.querySelectorAll(".item-escolha").forEach(b => {
+      b.style.display = b.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  function ajustarCamposCarreta(c) {
+    const c1 = document.querySelector('[data-foto="carreta1"]');
+    const c2 = document.querySelector('[data-foto="carreta2"]');
+    c1.classList.toggle("oculto", c.carretas.length < 1);
+    c2.classList.toggle("oculto", c.carretas.length < 2);
+    if (c.carretas[0]) c1.querySelector("label").textContent = "2. Placa da 1ª carreta (" + c.carretas[0] + ")";
+    if (c.carretas[1]) c2.querySelector("label").textContent = "3. Placa da 2ª carreta (" + c.carretas[1] + ")";
+    document.getElementById("revParaPlaca").textContent = c.placa;
+    document.getElementById("sucParaPlaca").textContent = c.placa;
+  }
+
+  /* ---------- Fotos simuladas ---------- */
+  document.body.addEventListener("click", (e) => {
+    const botao = e.target.closest(".foto-botao");
+    if (!botao) return;
+    const campo = botao.closest(".foto-campo");
+    campo.innerHTML = campo.querySelector("label").outerHTML + `
+      <div class="foto-tirada">
+        <div class="imagem">🔠</div>
+        <span class="selo">✓ Foto salva</span>
+        <button class="refazer" type="button">Refazer</button>
+      </div>`;
+    campo.querySelector(".refazer").addEventListener("click", () => {
+      campo.innerHTML = campo.querySelector("label").outerHTML +
+        `<button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>`;
+    });
+  });
+
+  document.getElementById("btnAddCarreta").addEventListener("click", function () {
+    const c2 = document.querySelector('[data-foto="carreta2"]');
+    c2.classList.remove("oculto");
+    this.classList.add("oculto");
+  });
+
+  /* ---------- Passo 4: checklist ---------- */
+  const estadoChecklist = {};
+  function montarChecklist() {
+    const cont = document.getElementById("listaChecklist");
+    if (cont.dataset.pronto) { atualizarContagem(); return; }
+    cont.dataset.pronto = "1";
+    D.kit.forEach(item => {
+      estadoChecklist[item.id] = { status: null, foto: false };
+      const div = document.createElement("div");
+      div.className = "checklist-item";
+      div.dataset.item = item.id;
+      div.innerHTML = `
+        <div class="cabeca">
+          <div class="emoji">${item.emoji}</div>
+          <div><div class="nome">${item.nome}</div>
+          <div class="status-atual" style="color:var(--cinza-suave)">Toque para responder</div></div>
+        </div>
+        <div class="opcoes-status">
+          <button data-st="ok"><span class="ic">✅</span>Tem</button>
+          <button data-st="falta"><span class="ic">❌</span>Falta</button>
+          <button data-st="dano"><span class="ic">⚠️</span>Danificado</button>
+        </div>
+        <button class="mini-foto-botao"><span>📷</span> Tirar foto do item</button>`;
+      cont.appendChild(div);
+    });
+    atualizarContagem();
+  }
+
+  document.body.addEventListener("click", (e) => {
+    const st = e.target.closest(".opcoes-status button");
+    if (st) {
+      const item = st.closest(".checklist-item");
+      const id = item.dataset.item;
+      const valor = st.dataset.st;
+      estadoChecklist[id].status = valor;
+      item.querySelectorAll(".opcoes-status button").forEach(b => b.className = "");
+      st.className = "sel-" + valor;
+      item.classList.remove("ok", "falta", "dano");
+      item.classList.add(valor === "ok" ? "ok" : valor === "falta" ? "falta" : "dano");
+      const rot = { ok: "Tem ✓", falta: "Está faltando", dano: "Danificado" }[valor];
+      const cor = { ok: "var(--verde)", falta: "var(--vermelho)", dano: "var(--amarelo)" }[valor];
+      const sa = item.querySelector(".status-atual");
+      sa.textContent = rot; sa.style.color = cor;
+      atualizarContagem();
+    }
+    const mf = e.target.closest(".mini-foto-botao");
+    if (mf && mf.closest(".checklist-item")) {
+      const id = mf.closest(".checklist-item").dataset.item;
+      estadoChecklist[id].foto = true;
+      mf.classList.add("tem");
+      mf.innerHTML = "<span>✓</span> Foto salva — toque para trocar";
+      atualizarContagem();
+    }
+  });
+
+  function atualizarContagem() {
+    const total = D.kit.length;
+    const feitos = Object.values(estadoChecklist).filter(x => x.status).length;
+    document.getElementById("checklistContagem").textContent = feitos + " de " + total;
+  }
+
+  /* ---------- Passo 5: resumo ---------- */
+  function montarResumo() {
+    const cont = document.getElementById("resumoChecklist");
+    const tagClasse = { ok: "ok", falta: "falta", dano: "dano" };
+    const tagTexto = { ok: "Tem", falta: "Falta", dano: "Danificado" };
+    cont.innerHTML = D.kit.map(item => {
+      const st = estadoChecklist[item.id] && estadoChecklist[item.id].status;
+      const tag = st
+        ? `<span class="tag ${tagClasse[st]}">${tagTexto[st]}</span>`
+        : `<span class="tag falta">Sem resposta</span>`;
+      return `<div class="resumo-linha"><span class="rot">${item.emoji} ${item.nome}</span><span class="val">${tag}</span></div>`;
+    }).join("");
+  }
+
+  mostrar("login", true);
+  historico.length = 0;
+})();
+</script>
+</div>
+<div id="viewAdmin" hidden>
+<!-- ================= LOGIN ================= -->
+<div class="admin-login" id="adminLogin">
+  <div class="caixa">
+    <div class="logo">🚚</div>
+    <h1>Painel da Frota</h1>
+    <p class="sub">Acesso restrito — administradores</p>
+    <div class="campo">
+      <label for="admUser">E-mail</label>
+      <input id="admUser" type="email" value="gianluca@empresa.com.br">
+    </div>
+    <div class="campo">
+      <label for="admSenha">Senha</label>
+      <input id="admSenha" type="password" value="123456">
+    </div>
+    <button class="btn btn-primario" id="btnEntrarAdmin">Entrar</button>
+  </div>
+</div>
+
+<!-- ================= PAINEL ================= -->
+<div class="admin oculto" id="adminApp">
+  <div class="admin-topo">
+    <span class="marca">🚚 FROTA</span>
+    <nav class="admin-nav">
+      <button class="ativo" data-secao="painel">Painel</button>
+      <button data-secao="caminhoes">Caminhões</button>
+      <button data-secao="motoristas">Motoristas</button>
+    </nav>
+    <button class="admin-sino" id="btnSino">🔔<span class="bolha">3</span></button>
+    <span class="admin-usuario">Gianluca (admin)</span>
+  </div>
+
+  <div class="admin-corpo">
+
+    <!-- PAINEL -->
+    <section class="admin-secao ativa" data-secao="painel">
+      <h1>Painel</h1>
+      <p class="sub">Acompanhe as trocas de caminhão em tempo real.</p>
+
+      <div class="cards-kpi">
+        <div class="kpi"><div class="numero">4</div><div class="rotulo">Trocas hoje</div></div>
+        <div class="kpi alerta"><div class="numero">1</div><div class="rotulo">Trocas pendentes de revisão</div></div>
+        <div class="kpi alerta"><div class="numero">2</div><div class="rotulo">Itens faltando / danificados</div></div>
+        <div class="kpi ok"><div class="numero">5</div><div class="rotulo">Motoristas ativos</div></div>
+      </div>
+
+      <div class="painel-bloco">
+        <header>Trocas recentes <span style="font-weight:600;color:var(--cinza-suave);font-size:.9rem">clique para ver o checklist</span></header>
+        <table class="tabela">
+          <thead>
+            <tr><th>Protocolo</th><th>Motorista</th><th>Troca</th><th>Quando</th><th>Situação</th></tr>
+          </thead>
+          <tbody id="tabelaTrocas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DETALHE DA TROCA -->
+    <section class="admin-secao" data-secao="detalhe">
+      <button class="voltar-link" data-secao-ir="painel">‹ Voltar para o painel</button>
+      <h1 id="detTitulo">Troca T-1042</h1>
+      <p class="sub" id="detSub">José da Silva · Hoje, 07:12</p>
+
+      <div class="detalhe-grade">
+        <div>
+          <div class="painel-bloco">
+            <header>Fotos das placas</header>
+            <div style="padding:20px">
+              <div class="galeria-fotos">
+                <div class="foto-thumb"><div class="img">🔠</div><div class="cap">Cavalo — RXA-1B23</div></div>
+                <div class="foto-thumb"><div class="img">🔠</div><div class="cap">Carreta 1 — SLT-4C55</div></div>
+                <div class="foto-thumb"><div class="img">🔠</div><div class="cap">Carreta 2 — SLT-4C56</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="painel-bloco">
+            <header>Checklist do kit básico</header>
+            <div style="padding:8px 20px 16px">
+              <ul class="checklist-admin" id="detChecklist"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="painel-bloco">
+            <header>Resumo</header>
+            <div style="padding:16px 20px">
+              <div class="resumo-linha"><span class="rot">Saiu de</span><span class="val"><span class="placa pequena">QPT-9D87</span></span></div>
+              <div class="resumo-linha"><span class="rot">Entrou em</span><span class="val"><span class="placa pequena">RXA-1B23</span></span></div>
+              <div class="resumo-linha"><span class="rot">Carretas</span><span class="val">SLT-4C55 · SLT-4C56</span></div>
+              <div class="resumo-linha"><span class="rot">Itens OK</span><span class="val">8 de 10</span></div>
+              <div class="resumo-linha"><span class="rot">Problemas</span><span class="val" style="color:var(--vermelho)">Triângulo (falta) · Estepe (danificado)</span></div>
+            </div>
+          </div>
+
+          <button class="btn btn-verde" id="btnRevisar">✓ Marcar como revisado</button>
+          <button class="btn btn-claro" style="margin-top:10px">⬇️ Baixar PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CAMINHÕES -->
+    <section class="admin-secao" data-secao="caminhoes">
+      <h1>Caminhões</h1>
+      <p class="sub">Cavalos mecânicos cadastrados e quem está com cada um.</p>
+      <div class="form-inline">
+        <input type="text" placeholder="Placa (ex: RXA-1B23)">
+        <input type="text" placeholder="Modelo">
+        <button class="btn btn-primario">➕ Adicionar caminhão</button>
+      </div>
+      <div class="grade-cartoes" id="gradeCaminhoes"></div>
+    </section>
+
+    <!-- MOTORISTAS -->
+    <section class="admin-secao" data-secao="motoristas">
+      <h1>Motoristas</h1>
+      <p class="sub">Cada motorista tem seu próprio usuário e senha.</p>
+      <div class="form-inline">
+        <input type="text" placeholder="Nome completo">
+        <input type="text" placeholder="Usuário">
+        <button class="btn btn-primario">➕ Criar acesso</button>
+      </div>
+      <div class="painel-bloco">
+        <table class="tabela">
+          <thead><tr><th>Nome</th><th>Usuário</th><th>Caminhão atual</th><th></th></tr></thead>
+          <tbody id="tabelaMotoristas"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- painel de notificações -->
+  <div id="painelNotif" style="position:fixed;top:64px;right:0;width:360px;max-width:90vw;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.15);height:calc(100vh - 64px);overflow:auto;transform:translateX(100%);transition:transform .2s ease;z-index:30">
+    <div style="padding:16px 20px;font-weight:800;border-bottom:2px solid var(--cinza-fundo);display:flex;justify-content:space-between;align-items:center">
+      Notificações
+      <button id="fecharNotif" style="background:none;border:none;font-size:1.4rem;cursor:pointer">×</button>
+    </div>
+    <div id="listaNotif"></div>
+    <div style="padding:16px 20px;color:var(--cinza-suave);font-size:.9rem">
+      Você recebe um aviso por e-mail e aqui no painel a cada troca de caminhão.
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function () {
+  const D = window.DEMO;
+
+  document.getElementById("btnEntrarAdmin").addEventListener("click", () => {
+    document.getElementById("adminLogin").classList.add("oculto");
+    document.getElementById("adminApp").classList.remove("oculto");
+  });
+
+  const secoes = [...document.querySelectorAll(".admin-secao")];
+  function irSecao(nome) {
+    secoes.forEach(s => s.classList.toggle("ativa", s.dataset.secao === nome));
+    document.querySelectorAll(".admin-nav button").forEach(b =>
+      b.classList.toggle("ativo", b.dataset.secao === nome));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".admin-nav button").forEach(b =>
+    b.addEventListener("click", () => irSecao(b.dataset.secao)));
+  document.querySelectorAll("[data-secao-ir]").forEach(b =>
+    b.addEventListener("click", () => irSecao(b.dataset.secaoIr)));
+
+  /* Tabela de trocas */
+  const pillTexto = { novo: "Nova", revisado: "Revisada", problema: "Com problema", pendente: "Pendente" };
+  const pillClasse = { novo: "novo", revisado: "revisado", problema: "problema", pendente: "pendente" };
+  document.getElementById("tabelaTrocas").innerHTML = D.trocas.map(t => `
+    <tr class="clicavel" data-troca="${t.id}">
+      <td><b>${t.id}</b></td>
+      <td>${t.motorista}</td>
+      <td><span class="rota">${t.de} <span class="seta">→</span> ${t.para}</span></td>
+      <td>${t.quando}</td>
+      <td><span class="pill ${pillClasse[t.status]}">${pillTexto[t.status]}</span>
+        ${t.problemas ? ` <span class="pill problema">${t.problemas} problema(s)</span>` : ""}</td>
+    </tr>`).join("");
+  document.querySelectorAll("[data-troca]").forEach(tr =>
+    tr.addEventListener("click", () => {
+      const t = D.trocas.find(x => x.id === tr.dataset.troca);
+      document.getElementById("detTitulo").textContent = "Troca " + t.id;
+      document.getElementById("detSub").textContent = t.motorista + " · " + t.quando;
+      irSecao("detalhe");
+    }));
+
+  /* Checklist no detalhe */
+  const statusDet = ["ok","ok","ok","ok","falta","dano","ok","ok","ok","ok"];
+  const txtDet = { ok: "OK", falta: "FALTA", dano: "DANIFICADO" };
+  const pillDet = { ok: "revisado", falta: "problema", dano: "pendente" };
+  document.getElementById("detChecklist").innerHTML = D.kit.map((item, i) => `
+    <li>
+      <span class="emoji">${item.emoji}</span>
+      <span class="nome">${item.nome}</span>
+      <span class="pill ${pillDet[statusDet[i]]}">${txtDet[statusDet[i]]}</span>
+      <span class="cam tem" title="Tem foto">📷</span>
+    </li>`).join("");
+
+  document.getElementById("btnRevisar").addEventListener("click", function () {
+    this.textContent = "✓ Revisado";
+    this.classList.remove("btn-verde");
+    this.classList.add("btn-claro");
+    this.disabled = true;
+  });
+
+  /* Caminhões */
+  document.getElementById("gradeCaminhoes").innerHTML = D.caminhoes.map(c => {
+    const m = D.motoristas.find(x => x.caminhao === c.placa);
+    return `<div class="cartao-veiculo">
+      <div class="placa pequena">${c.placa}</div>
+      <div style="margin-top:8px;font-weight:700">${c.modelo}</div>
+      <div class="quem">${c.carretas.length ? c.carretas.length + " carreta(s): " + c.carretas.join(", ") : "Sem carreta engatada"}</div>
+      <div class="quem">👤 ${m ? m.nome : "Nenhum motorista no momento"}</div>
+    </div>`;
+  }).join("");
+
+  /* Motoristas */
+  document.getElementById("tabelaMotoristas").innerHTML = D.motoristas.map(m => `
+    <tr>
+      <td><b>${m.nome}</b></td>
+      <td>${m.usuario}</td>
+      <td>${m.caminhao === "—" ? '<span style="color:var(--cinza-suave)">—</span>' : '<span class="placa pequena">' + m.caminhao + '</span>'}</td>
+      <td><button class="btn btn-fantasma" style="width:auto">Redefinir senha</button></td>
+    </tr>`).join("");
+
+  /* Notificações */
+  document.getElementById("listaNotif").innerHTML = D.notificacoes.map(n => `
+    <div class="notif-item">
+      <span class="ponto"></span>
+      <div><div>${n.texto}</div><div class="quando">${n.quando}</div></div>
+    </div>`).join("");
+  const painel = document.getElementById("painelNotif");
+  document.getElementById("btnSino").addEventListener("click", () =>
+    painel.style.transform = painel.style.transform === "translateX(0px)" ? "translateX(100%)" : "translateX(0px)");
+  document.getElementById("fecharNotif").addEventListener("click", () =>
+    painel.style.transform = "translateX(100%)");
+})();
+</script>
+</div>
+<script>
+(function(){
+  var vm=document.getElementById('viewMotorista');
+  var va=document.getElementById('viewAdmin');
+  var bm=document.getElementById('swMot');
+  var ba=document.getElementById('swAdm');
+  function sel(qual){
+    var mot = qual==='mot';
+    vm.hidden=!mot; va.hidden=mot;
+    bm.classList.toggle('on',mot); ba.classList.toggle('on',!mot);
+    window.scrollTo(0,0);
+  }
+  bm.addEventListener('click',function(){sel('mot');});
+  ba.addEventListener('click',function(){sel('adm');});
+})();
+</script>
+</body>
+</html>
