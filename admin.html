@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frota — Painel do Administrador</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="admin-login" id="adminLogin">
+  <div class="caixa">
+    <div class="logo">🚚</div>
+    <h1>Painel da Frota</h1>
+    <p class="sub">Acesso restrito — administradores</p>
+    <div class="campo">
+      <label for="admUser">E-mail</label>
+      <input id="admUser" type="email" value="gianluca@empresa.com.br">
+    </div>
+    <div class="campo">
+      <label for="admSenha">Senha</label>
+      <input id="admSenha" type="password" value="123456">
+    </div>
+    <button class="btn btn-primario" id="btnEntrarAdmin">Entrar</button>
+  </div>
+</div>
+
+<!-- ================= PAINEL ================= -->
+<div class="admin oculto" id="adminApp">
+  <div class="admin-topo">
+    <span class="marca">🚚 FROTA</span>
+    <nav class="admin-nav">
+      <button class="ativo" data-secao="painel">Painel</button>
+      <button data-secao="caminhoes">Caminhões</button>
+      <button data-secao="motoristas">Motoristas</button>
+    </nav>
+    <button class="admin-sino" id="btnSino">🔔<span class="bolha">3</span></button>
+    <span class="admin-usuario">Gianluca (admin)</span>
+  </div>
+
+  <div class="admin-corpo">
+
+    <!-- PAINEL -->
+    <section class="admin-secao ativa" data-secao="painel">
+      <h1>Painel</h1>
+      <p class="sub">Acompanhe as trocas de caminhão em tempo real.</p>
+
+      <div class="cards-kpi">
+        <div class="kpi"><div class="numero">4</div><div class="rotulo">Trocas hoje</div></div>
+        <div class="kpi alerta"><div class="numero">1</div><div class="rotulo">Trocas pendentes de revisão</div></div>
+        <div class="kpi alerta"><div class="numero">2</div><div class="rotulo">Itens faltando / danificados</div></div>
+        <div class="kpi ok"><div class="numero">5</div><div class="rotulo">Motoristas ativos</div></div>
+      </div>
+
+      <div class="painel-bloco">
+        <header>Trocas recentes <span style="font-weight:600;color:var(--cinza-suave);font-size:.9rem">clique para ver o checklist</span></header>
+        <table class="tabela">
+          <thead>
+            <tr><th>Protocolo</th><th>Motorista</th><th>Troca</th><th>Quando</th><th>Situação</th></tr>
+          </thead>
+          <tbody id="tabelaTrocas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DETALHE DA TROCA -->
+    <section class="admin-secao" data-secao="detalhe">
+      <button class="voltar-link" data-secao-ir="painel">‹ Voltar para o painel</button>
+      <h1 id="detTitulo">Troca T-1042</h1>
+      <p class="sub" id="detSub">José da Silva · Hoje, 07:12</p>
+
+      <div class="detalhe-grade">
+        <div>
+          <div class="painel-bloco">
+            <header>Fotos das placas</header>
+            <div style="padding:20px">
+              <div class="galeria-fotos">
+                <div class="foto-thumb"><div class="img">🔠</div><div class="cap">Cavalo — RXA-1B23</div></div>
+                <div class="foto-thumb"><div class="img">🔠</div><div class="cap">Carreta 1 — SLT-4C55</div></div>
+                <div class="foto-thumb"><div class="img">🔠</div><div class="cap">Carreta 2 — SLT-4C56</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="painel-bloco">
+            <header>Checklist do kit básico</header>
+            <div style="padding:8px 20px 16px">
+              <ul class="checklist-admin" id="detChecklist"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="painel-bloco">
+            <header>Resumo</header>
+            <div style="padding:16px 20px">
+              <div class="resumo-linha"><span class="rot">Saiu de</span><span class="val"><span class="placa pequena">QPT-9D87</span></span></div>
+              <div class="resumo-linha"><span class="rot">Entrou em</span><span class="val"><span class="placa pequena">RXA-1B23</span></span></div>
+              <div class="resumo-linha"><span class="rot">Carretas</span><span class="val">SLT-4C55 · SLT-4C56</span></div>
+              <div class="resumo-linha"><span class="rot">Itens OK</span><span class="val">8 de 10</span></div>
+              <div class="resumo-linha"><span class="rot">Problemas</span><span class="val" style="color:var(--vermelho)">Triângulo (falta) · Estepe (danificado)</span></div>
+            </div>
+          </div>
+
+          <button class="btn btn-verde" id="btnRevisar">✓ Marcar como revisado</button>
+          <button class="btn btn-claro" style="margin-top:10px">⬇️ Baixar PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CAMINHÕES -->
+    <section class="admin-secao" data-secao="caminhoes">
+      <h1>Caminhões</h1>
+      <p class="sub">Cavalos mecânicos cadastrados e quem está com cada um.</p>
+      <div class="form-inline">
+        <input type="text" placeholder="Placa (ex: RXA-1B23)">
+        <input type="text" placeholder="Modelo">
+        <button class="btn btn-primario">➕ Adicionar caminhão</button>
+      </div>
+      <div class="grade-cartoes" id="gradeCaminhoes"></div>
+    </section>
+
+    <!-- MOTORISTAS -->
+    <section class="admin-secao" data-secao="motoristas">
+      <h1>Motoristas</h1>
+      <p class="sub">Cada motorista tem seu próprio usuário e senha.</p>
+      <div class="form-inline">
+        <input type="text" placeholder="Nome completo">
+        <input type="text" placeholder="Usuário">
+        <button class="btn btn-primario">➕ Criar acesso</button>
+      </div>
+      <div class="painel-bloco">
+        <table class="tabela">
+          <thead><tr><th>Nome</th><th>Usuário</th><th>Caminhão atual</th><th></th></tr></thead>
+          <tbody id="tabelaMotoristas"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- painel de notificações -->
+  <div id="painelNotif" style="position:fixed;top:64px;right:0;width:360px;max-width:90vw;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.15);height:calc(100vh - 64px);overflow:auto;transform:translateX(100%);transition:transform .2s ease;z-index:30">
+    <div style="padding:16px 20px;font-weight:800;border-bottom:2px solid var(--cinza-fundo);display:flex;justify-content:space-between;align-items:center">
+      Notificações
+      <button id="fecharNotif" style="background:none;border:none;font-size:1.4rem;cursor:pointer">×</button>
+    </div>
+    <div id="listaNotif"></div>
+    <div style="padding:16px 20px;color:var(--cinza-suave);font-size:.9rem">
+      Você recebe um aviso por e-mail e aqui no painel a cada troca de caminhão.
+    </div>
+  </div>
+</div>
+
+<script src="assets/demo.js"></script>
+<script>
+(function () {
+  const D = window.DEMO;
+
+  document.getElementById("btnEntrarAdmin").addEventListener("click", () => {
+    document.getElementById("adminLogin").classList.add("oculto");
+    document.getElementById("adminApp").classList.remove("oculto");
+  });
+
+  const secoes = [...document.querySelectorAll(".admin-secao")];
+  function irSecao(nome) {
+    secoes.forEach(s => s.classList.toggle("ativa", s.dataset.secao === nome));
+    document.querySelectorAll(".admin-nav button").forEach(b =>
+      b.classList.toggle("ativo", b.dataset.secao === nome));
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".admin-nav button").forEach(b =>
+    b.addEventListener("click", () => irSecao(b.dataset.secao)));
+  document.querySelectorAll("[data-secao-ir]").forEach(b =>
+    b.addEventListener("click", () => irSecao(b.dataset.secaoIr)));
+
+  /* Tabela de trocas */
+  const pillTexto = { novo: "Nova", revisado: "Revisada", problema: "Com problema", pendente: "Pendente" };
+  const pillClasse = { novo: "novo", revisado: "revisado", problema: "problema", pendente: "pendente" };
+  document.getElementById("tabelaTrocas").innerHTML = D.trocas.map(t => `
+    <tr class="clicavel" data-troca="${t.id}">
+      <td><b>${t.id}</b></td>
+      <td>${t.motorista}</td>
+      <td><span class="rota">${t.de} <span class="seta">→</span> ${t.para}</span></td>
+      <td>${t.quando}</td>
+      <td><span class="pill ${pillClasse[t.status]}">${pillTexto[t.status]}</span>
+        ${t.problemas ? ` <span class="pill problema">${t.problemas} problema(s)</span>` : ""}</td>
+    </tr>`).join("");
+  document.querySelectorAll("[data-troca]").forEach(tr =>
+    tr.addEventListener("click", () => {
+      const t = D.trocas.find(x => x.id === tr.dataset.troca);
+      document.getElementById("detTitulo").textContent = "Troca " + t.id;
+      document.getElementById("detSub").textContent = t.motorista + " · " + t.quando;
+      irSecao("detalhe");
+    }));
+
+  /* Checklist no detalhe */
+  const statusDet = ["ok","ok","ok","ok","falta","dano","ok","ok","ok","ok"];
+  const txtDet = { ok: "OK", falta: "FALTA", dano: "DANIFICADO" };
+  const pillDet = { ok: "revisado", falta: "problema", dano: "pendente" };
+  document.getElementById("detChecklist").innerHTML = D.kit.map((item, i) => `
+    <li>
+      <span class="emoji">${item.emoji}</span>
+      <span class="nome">${item.nome}</span>
+      <span class="pill ${pillDet[statusDet[i]]}">${txtDet[statusDet[i]]}</span>
+      <span class="cam tem" title="Tem foto">📷</span>
+    </li>`).join("");
+
+  document.getElementById("btnRevisar").addEventListener("click", function () {
+    this.textContent = "✓ Revisado";
+    this.classList.remove("btn-verde");
+    this.classList.add("btn-claro");
+    this.disabled = true;
+  });
+
+  /* Caminhões */
+  document.getElementById("gradeCaminhoes").innerHTML = D.caminhoes.map(c => {
+    const m = D.motoristas.find(x => x.caminhao === c.placa);
+    return `<div class="cartao-veiculo">
+      <div class="placa pequena">${c.placa}</div>
+      <div style="margin-top:8px;font-weight:700">${c.modelo}</div>
+      <div class="quem">${c.carretas.length ? c.carretas.length + " carreta(s): " + c.carretas.join(", ") : "Sem carreta engatada"}</div>
+      <div class="quem">👤 ${m ? m.nome : "Nenhum motorista no momento"}</div>
+    </div>`;
+  }).join("");
+
+  /* Motoristas */
+  document.getElementById("tabelaMotoristas").innerHTML = D.motoristas.map(m => `
+    <tr>
+      <td><b>${m.nome}</b></td>
+      <td>${m.usuario}</td>
+      <td>${m.caminhao === "—" ? '<span style="color:var(--cinza-suave)">—</span>' : '<span class="placa pequena">' + m.caminhao + '</span>'}</td>
+      <td><button class="btn btn-fantasma" style="width:auto">Redefinir senha</button></td>
+    </tr>`).join("");
+
+  /* Notificações */
+  document.getElementById("listaNotif").innerHTML = D.notificacoes.map(n => `
+    <div class="notif-item">
+      <span class="ponto"></span>
+      <div><div>${n.texto}</div><div class="quando">${n.quando}</div></div>
+    </div>`).join("");
+  const painel = document.getElementById("painelNotif");
+  document.getElementById("btnSino").addEventListener("click", () =>
+    painel.style.transform = painel.style.transform === "translateX(0px)" ? "translateX(100%)" : "translateX(0px)");
+  document.getElementById("fecharNotif").addEventListener("click", () =>
+    painel.style.transform = "translateX(100%)");
+})();
+</script>
+</body>
+</html>

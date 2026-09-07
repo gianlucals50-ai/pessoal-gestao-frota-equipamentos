@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1d4ed8">
+<title>Frota — App do Motorista</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<div class="telefone-app">
+
+  <!-- Barra de cima -->
+  <div class="app-topo" id="appTopo">
+    <button class="voltar oculto" id="btnVoltar" aria-label="Voltar">‹</button>
+    <span class="marca" id="topoMarca">🚚 FROTA</span>
+    <span class="titulo oculto" id="topoTitulo"></span>
+  </div>
+
+  <div class="app-conteudo">
+
+    <!-- ================= LOGIN ================= -->
+    <section class="tela ativa" data-tela="login">
+      <div class="login-caixa">
+        <div class="logo">🚚</div>
+        <h1>Entrar</h1>
+        <p style="color:var(--cinza-suave)">Use seu usuário e senha</p>
+
+        <div class="campo">
+          <label for="usuario">👤 Usuário</label>
+          <input id="usuario" type="text" inputmode="text" autocomplete="username" value="jose.silva">
+        </div>
+        <div class="campo">
+          <label for="senha">🔒 Senha</label>
+          <input id="senha" type="password" autocomplete="current-password" value="1234">
+        </div>
+
+        <button class="btn btn-primario" data-ir="home">
+          <span class="icone">✅</span> ENTRAR
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= INÍCIO ================= -->
+    <section class="tela" data-tela="home">
+      <h2>Olá, José 👋</h2>
+
+      <div class="cartao">
+        <span class="rotulo">Seu caminhão agora</span>
+        <div class="placa">🚛 QPT-9D87</div>
+        <div style="color:var(--cinza-suave)">Volvo FH 460 · 1 carreta</div>
+      </div>
+
+      <button class="btn btn-primario" style="min-height:90px;font-size:1.3rem" data-ir="troca_de">
+        <span class="icone">🔄</span> TROCAR DE CAMINHÃO
+      </button>
+
+      <h3 style="margin-top:28px">Minhas últimas trocas</h3>
+      <div class="cartao" style="padding:0">
+        <div class="resumo-linha" style="padding:14px 16px">
+          <span class="rot">Ontem 08:15</span>
+          <span class="val">RTC-5K62 → RXA-1B23</span>
+        </div>
+        <div class="resumo-linha" style="padding:14px 16px">
+          <span class="rot">3 dias atrás</span>
+          <span class="val">RXA-1B23 → QPT-9D87</span>
+        </div>
+      </div>
+
+      <button class="btn btn-fantasma" style="margin-top:20px" data-ir="login">Sair da conta</button>
+    </section>
+
+    <!-- ================= PASSO 1: SAINDO DE ================= -->
+    <section class="tela" data-tela="troca_de" data-passo="1">
+      <div class="passos"><span class="atual"></span><span></span><span></span><span></span><span></span></div>
+      <div class="passo-texto">PASSO 1 DE 5</div>
+      <h2>De qual caminhão você está saindo?</h2>
+
+      <button class="item-escolha selecionado" style="margin-bottom:8px">
+        <span class="foto-mini"></span>
+        <span>
+          <span class="placa pequena">QPT-9D87</span><br>
+          Volvo FH 460 — seu caminhão atual
+        </span>
+      </button>
+      <p style="color:var(--cinza-suave);font-size:.95rem">Já deixamos marcado o caminhão em que você está. É só confirmar.</p>
+
+      <button class="btn btn-primario" data-ir="troca_para">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 2: INDO PARA ================= -->
+    <section class="tela" data-tela="troca_para" data-passo="2">
+      <div class="passos"><span class="feito"></span><span class="atual"></span><span></span><span></span><span></span></div>
+      <div class="passo-texto">PASSO 2 DE 5</div>
+      <h2>Para qual caminhão você vai?</h2>
+
+      <div class="campo">
+        <input type="text" placeholder="🔍 Digite ou procure a placa" id="buscaCaminhao">
+      </div>
+
+      <div class="lista-escolha" id="listaCaminhoes"><!-- preenchido por JS --></div>
+
+      <button class="btn btn-primario oculto" id="btnPasso2" data-ir="placas">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 3: FOTOS DAS PLACAS ================= -->
+    <section class="tela" data-tela="placas" data-passo="3">
+      <div class="passos"><span class="feito"></span><span class="feito"></span><span class="atual"></span><span></span><span></span></div>
+      <div class="passo-texto">PASSO 3 DE 5</div>
+      <h2>Fotografe as placas</h2>
+      <div class="aviso">📸 Tire a foto de perto, com a placa bem legível.</div>
+
+      <div class="foto-campo" data-foto="cavalo">
+        <label>1. Placa do cavalo mecânico</label>
+        <button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>
+      </div>
+
+      <div class="foto-campo" data-foto="carreta1">
+        <label>2. Placa da 1ª carreta</label>
+        <button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>
+      </div>
+
+      <div class="foto-campo" data-foto="carreta2">
+        <label>3. Placa da 2ª carreta</label>
+        <button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>
+      </div>
+
+      <button class="btn btn-fantasma" id="btnAddCarreta">➕ Tem outra carreta engatada</button>
+
+      <button class="btn btn-primario" style="margin-top:12px" data-ir="checklist">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 4: CHECKLIST ================= -->
+    <section class="tela" data-tela="checklist" data-passo="4">
+      <div class="passos"><span class="feito"></span><span class="feito"></span><span class="feito"></span><span class="atual"></span><span></span></div>
+      <div class="passo-texto">PASSO 4 DE 5 · <span id="checklistContagem">0 de 10</span></div>
+      <h2>Confira os itens do caminhão</h2>
+      <div class="aviso">Para cada item: toque em <b>Tem</b>, <b>Falta</b> ou <b>Danificado</b> e tire uma foto.</div>
+
+      <div id="listaChecklist"><!-- preenchido por JS --></div>
+
+      <button class="btn btn-primario" data-ir="revisar">
+        <span class="icone">➡️</span> CONTINUAR
+      </button>
+    </section>
+
+    <!-- ================= PASSO 5: REVISAR ================= -->
+    <section class="tela" data-tela="revisar" data-passo="5">
+      <div class="passos"><span class="feito"></span><span class="feito"></span><span class="feito"></span><span class="feito"></span><span class="atual"></span></div>
+      <div class="passo-texto">PASSO 5 DE 5</div>
+      <h2>Confira antes de enviar</h2>
+
+      <div class="cartao">
+        <div class="resumo-linha"><span class="rot">Saindo de</span><span class="val">QPT-9D87</span></div>
+        <div class="resumo-linha"><span class="rot">Indo para</span><span class="val" id="revParaPlaca">RXA-1B23</span></div>
+        <div class="resumo-linha"><span class="rot">Fotos das placas</span><span class="val">✅ 3 fotos</span></div>
+        <div class="resumo-linha"><span class="rot">Motorista</span><span class="val">José da Silva</span></div>
+        <div class="resumo-linha"><span class="rot">Data e hora</span><span class="val">Hoje, 07:12</span></div>
+      </div>
+
+      <h3>Itens conferidos</h3>
+      <div class="cartao" id="resumoChecklist" style="padding:6px 16px"><!-- JS --></div>
+
+      <button class="btn btn-verde" style="min-height:90px;font-size:1.3rem" data-ir="sucesso">
+        <span class="icone">📨</span> ENVIAR TROCA
+      </button>
+      <button class="btn btn-fantasma" data-ir="checklist">Voltar e corrigir</button>
+    </section>
+
+    <!-- ================= SUCESSO ================= -->
+    <section class="tela" data-tela="sucesso">
+      <div class="sucesso">
+        <div class="check">✓</div>
+        <h1>Troca registrada!</h1>
+        <p style="font-size:1.15rem">O escritório já foi avisado da sua troca de caminhão.</p>
+        <div class="cartao" style="text-align:left">
+          <div class="resumo-linha"><span class="rot">Protocolo</span><span class="val">T-1042</span></div>
+          <div class="resumo-linha"><span class="rot">Novo caminhão</span><span class="val" id="sucParaPlaca">RXA-1B23</span></div>
+        </div>
+        <button class="btn btn-primario" data-ir="home">
+          <span class="icone">🏠</span> VOLTAR AO INÍCIO
+        </button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="assets/demo.js"></script>
+<script>
+(function () {
+  const D = window.DEMO;
+  const telas = [...document.querySelectorAll(".tela")];
+  const btnVoltar = document.getElementById("btnVoltar");
+  const topoMarca = document.getElementById("topoMarca");
+  const topoTitulo = document.getElementById("topoTitulo");
+  const historico = [];
+  const titulos = {
+    home: "Início", troca_de: "Trocar de caminhão", troca_para: "Trocar de caminhão",
+    placas: "Fotos das placas", checklist: "Checklist", revisar: "Revisar", sucesso: ""
+  };
+  let caminhaoDestino = null;
+
+  function mostrar(nome, push = true) {
+    telas.forEach(t => t.classList.toggle("ativa", t.dataset.tela === nome));
+    if (push && historico[historico.length - 1] !== nome) historico.push(nome);
+    const temVoltar = nome !== "login" && nome !== "home" && nome !== "sucesso";
+    btnVoltar.classList.toggle("oculto", !temVoltar);
+    const ehApp = nome !== "login";
+    topoMarca.classList.toggle("oculto", ehApp);
+    topoTitulo.classList.toggle("oculto", !ehApp);
+    topoTitulo.textContent = titulos[nome] || "";
+    window.scrollTo(0, 0);
+    document.querySelector(".app-conteudo").scrollTo(0, 0);
+  }
+
+  btnVoltar.addEventListener("click", () => {
+    historico.pop();
+    const anterior = historico[historico.length - 1] || "home";
+    mostrar(anterior, false);
+  });
+
+  document.body.addEventListener("click", (e) => {
+    const alvo = e.target.closest("[data-ir]");
+    if (alvo) {
+      const destino = alvo.dataset.ir;
+      if (destino === "login") historico.length = 0;
+      mostrar(destino);
+      if (destino === "checklist") montarChecklist();
+      if (destino === "revisar") montarResumo();
+    }
+  });
+
+  /* ---------- Passo 2: lista de caminhões ---------- */
+  const lista = document.getElementById("listaCaminhoes");
+  const btnPasso2 = document.getElementById("btnPasso2");
+  D.caminhoes
+    .filter(c => c.placa !== D.motoristaAtual.caminhaoAtual)
+    .forEach(c => {
+      const b = document.createElement("button");
+      b.className = "item-escolha";
+      b.innerHTML = `<span class="foto-mini"></span>
+        <span><span class="placa pequena">${c.placa}</span><br>${c.modelo}
+        ${c.carretas.length ? " — " + c.carretas.length + " carreta(s)" : " — sem carreta"}</span>`;
+      b.addEventListener("click", () => {
+        lista.querySelectorAll(".item-escolha").forEach(x => x.classList.remove("selecionado"));
+        b.classList.add("selecionado");
+        caminhaoDestino = c;
+        btnPasso2.classList.remove("oculto");
+        ajustarCamposCarreta(c);
+      });
+      lista.appendChild(b);
+    });
+
+  document.getElementById("buscaCaminhao").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    lista.querySelectorAll(".item-escolha").forEach(b => {
+      b.style.display = b.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  function ajustarCamposCarreta(c) {
+    const c1 = document.querySelector('[data-foto="carreta1"]');
+    const c2 = document.querySelector('[data-foto="carreta2"]');
+    c1.classList.toggle("oculto", c.carretas.length < 1);
+    c2.classList.toggle("oculto", c.carretas.length < 2);
+    if (c.carretas[0]) c1.querySelector("label").textContent = "2. Placa da 1ª carreta (" + c.carretas[0] + ")";
+    if (c.carretas[1]) c2.querySelector("label").textContent = "3. Placa da 2ª carreta (" + c.carretas[1] + ")";
+    document.getElementById("revParaPlaca").textContent = c.placa;
+    document.getElementById("sucParaPlaca").textContent = c.placa;
+  }
+
+  /* ---------- Fotos simuladas ---------- */
+  document.body.addEventListener("click", (e) => {
+    const botao = e.target.closest(".foto-botao");
+    if (!botao) return;
+    const campo = botao.closest(".foto-campo");
+    campo.innerHTML = campo.querySelector("label").outerHTML + `
+      <div class="foto-tirada">
+        <div class="imagem">🔠</div>
+        <span class="selo">✓ Foto salva</span>
+        <button class="refazer" type="button">Refazer</button>
+      </div>`;
+    campo.querySelector(".refazer").addEventListener("click", () => {
+      campo.innerHTML = campo.querySelector("label").outerHTML +
+        `<button class="foto-botao"><span class="icone">📷</span> TIRAR FOTO</button>`;
+    });
+  });
+
+  document.getElementById("btnAddCarreta").addEventListener("click", function () {
+    const c2 = document.querySelector('[data-foto="carreta2"]');
+    c2.classList.remove("oculto");
+    this.classList.add("oculto");
+  });
+
+  /* ---------- Passo 4: checklist ---------- */
+  const estadoChecklist = {};
+  function montarChecklist() {
+    const cont = document.getElementById("listaChecklist");
+    if (cont.dataset.pronto) { atualizarContagem(); return; }
+    cont.dataset.pronto = "1";
+    D.kit.forEach(item => {
+      estadoChecklist[item.id] = { status: null, foto: false };
+      const div = document.createElement("div");
+      div.className = "checklist-item";
+      div.dataset.item = item.id;
+      div.innerHTML = `
+        <div class="cabeca">
+          <div class="emoji">${item.emoji}</div>
+          <div><div class="nome">${item.nome}</div>
+          <div class="status-atual" style="color:var(--cinza-suave)">Toque para responder</div></div>
+        </div>
+        <div class="opcoes-status">
+          <button data-st="ok"><span class="ic">✅</span>Tem</button>
+          <button data-st="falta"><span class="ic">❌</span>Falta</button>
+          <button data-st="dano"><span class="ic">⚠️</span>Danificado</button>
+        </div>
+        <button class="mini-foto-botao"><span>📷</span> Tirar foto do item</button>`;
+      cont.appendChild(div);
+    });
+    atualizarContagem();
+  }
+
+  document.body.addEventListener("click", (e) => {
+    const st = e.target.closest(".opcoes-status button");
+    if (st) {
+      const item = st.closest(".checklist-item");
+      const id = item.dataset.item;
+      const valor = st.dataset.st;
+      estadoChecklist[id].status = valor;
+      item.querySelectorAll(".opcoes-status button").forEach(b => b.className = "");
+      st.className = "sel-" + valor;
+      item.classList.remove("ok", "falta", "dano");
+      item.classList.add(valor === "ok" ? "ok" : valor === "falta" ? "falta" : "dano");
+      const rot = { ok: "Tem ✓", falta: "Está faltando", dano: "Danificado" }[valor];
+      const cor = { ok: "var(--verde)", falta: "var(--vermelho)", dano: "var(--amarelo)" }[valor];
+      const sa = item.querySelector(".status-atual");
+      sa.textContent = rot; sa.style.color = cor;
+      atualizarContagem();
+    }
+    const mf = e.target.closest(".mini-foto-botao");
+    if (mf && mf.closest(".checklist-item")) {
+      const id = mf.closest(".checklist-item").dataset.item;
+      estadoChecklist[id].foto = true;
+      mf.classList.add("tem");
+      mf.innerHTML = "<span>✓</span> Foto salva — toque para trocar";
+      atualizarContagem();
+    }
+  });
+
+  function atualizarContagem() {
+    const total = D.kit.length;
+    const feitos = Object.values(estadoChecklist).filter(x => x.status).length;
+    document.getElementById("checklistContagem").textContent = feitos + " de " + total;
+  }
+
+  /* ---------- Passo 5: resumo ---------- */
+  function montarResumo() {
+    const cont = document.getElementById("resumoChecklist");
+    const tagClasse = { ok: "ok", falta: "falta", dano: "dano" };
+    const tagTexto = { ok: "Tem", falta: "Falta", dano: "Danificado" };
+    cont.innerHTML = D.kit.map(item => {
+      const st = estadoChecklist[item.id] && estadoChecklist[item.id].status;
+      const tag = st
+        ? `<span class="tag ${tagClasse[st]}">${tagTexto[st]}</span>`
+        : `<span class="tag falta">Sem resposta</span>`;
+      return `<div class="resumo-linha"><span class="rot">${item.emoji} ${item.nome}</span><span class="val">${tag}</span></div>`;
+    }).join("");
+  }
+
+  mostrar("login", true);
+  historico.length = 0;
+})();
+</script>
+</body>
+</html>
